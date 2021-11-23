@@ -25,6 +25,7 @@ kwargs = {
     'version': version,
     'description': "Simple website crawler built with Python's asyncio",
     'long_description': readme,
+    'long_description_content_type': "text/markdown",
     'author': 'Maximilian Wolf',
     'author_email': 'max@w0lf.me',
     'maintainer': 'Maximilian Wolf',
