@@ -92,10 +92,6 @@ class Crawler(object):
 
         yield dict(url=response.url, headers=response.headers, data=data)
 
-    @property
-    def data(self):
-        return self._data
-
 
 if __name__ == '__main__':
     """ Run this file for quick & dirty testing """
