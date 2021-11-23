@@ -9,7 +9,7 @@ import aiohttp
 from parsel import Selector as Parsel
 
 
-Request = namedtuple('Request', ('url', 'timestamp'))
+Request = namedtuple('Request', 'url')
 Response = namedtuple('Response', ('url', 'headers', 'html'))
 
 UA = (
@@ -23,8 +23,8 @@ class Crawler(object):
     def __init__(self, url: str, selectors: Dict[str, str] = None):
         self._url = url
         self._selectors = selectors
-        parsed_start_url = urlparse(self._url)
-        self._base_url = f"{parsed_start_url.scheme}://{parsed_start_url.netloc}/"
+        parsed = urlparse(self._url)
+        self._base_url = f"{parsed.scheme}://{parsed.netloc}/"
         self._headers = {'User-Agent': random.choice(UA)}
         self._loop = asyncio.get_event_loop()
         self._queue = {url}
@@ -81,7 +81,7 @@ class Crawler(object):
             if not link.startswith(self._base_url):
                 continue
             # Enqueue new request
-            yield Request(link, time.time())
+            yield Request(link)
 
         # Scrape user-defined data
         data = dict()
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     """ Run this file for quick & dirty testing """
     fields = {
         'title': '/html/head/title/text()',
-        'h1': 'string(//h1[1])'
+        # ...
     }
     crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
     start_time = time.time()
