@@ -16,7 +16,10 @@ pip install crawlio
 ```
 
 ## Usage
+
+### Synchronous ()
 ```python
+import asyncio
 from crawlio import Crawler
 
 fields = {
@@ -27,6 +30,22 @@ crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
 results = asyncio.run(crawler.run(), debug=True)
 for item in results:
     print(item)
+```
+
+### Asynchronous
+```python
+import asyncio
+from crawlio import Crawler
+
+async def some_coroutine():
+    fields = {
+        'title': '/html/head/title/text()',
+        # ...
+    }
+    loop = asyncio.get_event_loop()
+    crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
+    results = await crawler.run()
+    return results
 ```
 
 
