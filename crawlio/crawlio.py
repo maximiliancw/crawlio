@@ -21,9 +21,9 @@ UA = (
 class Crawler(object):
 
     def __init__(self, url: str, selectors: Dict[str, str] = None):
-        self.url = url
-        self.selectors = selectors
-        parsed_start_url = urlparse(self.url)
+        self._url = url
+        self._selectors = selectors
+        parsed_start_url = urlparse(self._url)
         self._base_url = f"{parsed_start_url.scheme}://{parsed_start_url.netloc}/"
         self._headers = {'User-Agent': random.choice(UA)}
         self._loop = asyncio.get_event_loop()
@@ -69,7 +69,6 @@ class Crawler(object):
                 # await asyncio.sleep(0.1)    # TODO: make this download delay configurable
 
     async def _scrape(self, response: Response) -> Generator[Union[Request, Dict[str, Any]], None, None]:
-        print(f'Scraping: {response.url}')
         dom = Parsel(text=response.html)
 
         # Scrape (internal) links for crawling
@@ -86,21 +85,25 @@ class Crawler(object):
 
         # Scrape user-defined data
         data = dict()
-        if self.selectors:
-            for field, query in self.selectors.items():
+        if self._selectors:
+            for field, query in self._selectors.items():
                 extracted = dom.xpath(query).getall()   # Extract from HTML
                 data[field] = extracted[0] if len(extracted) == 1 else extracted    # Transform single-element lists
 
         yield dict(url=response.url, headers=response.headers, data=data)
 
+    @property
+    def data(self):
+        return self._data
+
 
 if __name__ == '__main__':
     """ Run this file for quick & dirty testing """
-    selectors = {
+    fields = {
         'title': '/html/head/title/text()',
         'h1': 'string(//h1[1])'
     }
-    crawler = Crawler('https://quotes.toscrape.com/', selectors)
+    crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
     start_time = time.time()
     results = asyncio.run(crawler.run(), debug=True)
     end_time = time.time()
@@ -109,4 +112,3 @@ if __name__ == '__main__':
 
     duration = round(end_time - start_time, 2)
     print(f'Duration: {duration}s | Pages: {len(results)} | {round(len(results)/duration, 2)} p/s')
-    assert(len(results) == 214)
