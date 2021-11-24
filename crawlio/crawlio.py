@@ -31,8 +31,6 @@ class Crawler(object):
         self._data = []
 
     async def run(self) -> List[Dict[str, Any]]:
-        """ Main entrypoint for running a spider """
-        print('Crawler started')
         # Handle responses as they're yielded (using an asynchronous generator)
         async for response in self._crawl():
             async for obj in self._scrape(response):

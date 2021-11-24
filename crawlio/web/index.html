@@ -1,10 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
+<!doctype html>
+<html lang="en" style="height: 100%">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <title>crawlio</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <link href="/static/styles.css">
+  </head>
+  <body>
+    <main id="app" class="container">
+      <nav>
+        <ul>
+            <li>
+                <img width="100" src="https://raw.githubusercontent.com/maximiliancw/crawlio/master/static/logo.png" alt="crawlio">
+            </li>
+            <li><a href="#">Docs</a></li>
+            <li><a href="#">Source</a></li>
+        </ul>
+      </nav>
+      <div style="padding: 50px 0; margin-bottom: 100px; border-top: 1px solid grey; border-bottom: 1px solid grey">
+        <input v-model="url" placeholder="http://example.com" />
+        <span>Selectors</span>
+        <div class="grid">
+            <input v-model="newSelector.name" placeholder="Field" />
+            <input v-model="newSelector.query" placeholder="XPath" />
+            <button v-on:click="addSelector()">+</button>
+        </div>
+        <div style="margin: 50px 0;">
+            <span
+                class="selector"
+                v-for="(s, i) in selectors" v-bind:key="i"
+                v-on:click="delSelector(s)"
+                title="DELETE"
+            >
+                {{ s.name }}: <code>{{ s.query }}</code>
+            </span>
+        </div>
+        <button @click="submit()">CRAWL</button>
+      </div>
+      <table v-if="rows.length && !loading">
+        <thead>
+            <tr>
+                <th>URL</th>
+                <th>Headers</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="(row, i) in rows" v-bind:key="i">
+                <td v-for="key in Object.keys(row)" v-bind:key="key">
+                    {{ row[key] }}
+                </td>
+            </tr>
+        </tbody>
+      </table>
+      <div v-if="loading">
+        <h3>LOADING...</h3>
+      </div>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
 </html>

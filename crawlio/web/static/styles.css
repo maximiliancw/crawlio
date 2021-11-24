@@ -1,0 +1,20 @@
+span.selector {
+    text-align: center;
+    max-width:30%;
+    margin: 10px 0;
+    color: darkgrey;
+    padding: 15px 40px;
+    border: 1px solid darkgrey;
+    border-radius: 30px;
+}
+
+span.selector:hover {
+    background-color: red;
+    border-color: red;
+    color: white;
+}
+
+code {
+    padding: 5px 5px;
+    color: darkgrey;
+}
