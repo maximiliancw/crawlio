@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import uvicorn as uvicorn
 from fastapi import FastAPI, Body
@@ -19,7 +19,7 @@ async def index():
 
 
 @app.post('/crawl')
-async def crawl(url: AnyHttpUrl = Body(...), selectors: Dict[str, str] = Body(None)):
+async def crawl(url: AnyHttpUrl = Body(...), selectors: List[Dict[str, str]] = Body(None)):
     crawler = Crawler(url, selectors)
     return await crawler.run()
 

@@ -20,7 +20,7 @@ UA = (
 
 class Crawler(object):
 
-    def __init__(self, url: str, selectors: Dict[str, str] = None):
+    def __init__(self, url: str, selectors: List[Dict[str, str]] = None):
         self._url = url
         self._selectors = selectors
         parsed = urlparse(self._url)
@@ -30,8 +30,9 @@ class Crawler(object):
         self._queue = {url}
         self._data = []
 
-    async def run(self) -> List[Dict[str, Any]]:
+    async def run(self) -> Dict[str, Any]:
         # Handle responses as they're yielded (using an asynchronous generator)
+        start_time = time.time()
         async for response in self._crawl():
             async for obj in self._scrape(response):
                 # response is a new request object
@@ -40,7 +41,16 @@ class Crawler(object):
                 # response is a new page item
                 else:
                     self._data.append(obj)
-        return self._data
+        end_time = time.time()
+        duration = round(end_time - start_time, 2)
+        return dict(
+            meta=dict(
+                pages=len(self._data),
+                duration=duration,
+                performance=round(len(self._data)/duration, 2)
+            ),
+            data=self._data
+        )
 
     async def _crawl(self) -> Generator[Response, None, None]:
         """ Handles the actual crawling process """
@@ -84,9 +94,10 @@ class Crawler(object):
         # Scrape user-defined data
         data = dict()
         if self._selectors:
-            for field, query in self._selectors.items():
-                extracted = dom.xpath(query).getall()   # Extract from HTML
-                data[field] = extracted[0] if len(extracted) == 1 else extracted    # Transform single-element lists
+            for selector in self._selectors:
+                extract = dom.xpath(selector['query']).getall()   # Extract from HTML
+                transform = extract[0] if len(extract) == 1 else extract    # Transform single-element lists
+                data[selector['name']] = transform
 
         yield dict(url=response.url, headers=response.headers, data=data)
 
@@ -98,11 +109,6 @@ if __name__ == '__main__':
         # ...
     }
     crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
-    start_time = time.time()
     results = asyncio.run(crawler.run(), debug=True)
-    end_time = time.time()
     for item in results:
         print(item)
-
-    duration = round(end_time - start_time, 2)
-    print(f'Duration: {duration}s | Pages: {len(results)} | {round(len(results)/duration, 2)} p/s')

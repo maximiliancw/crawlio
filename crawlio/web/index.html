@@ -6,57 +6,87 @@
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
     <title>crawlio</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-    <link href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
   </head>
   <body>
     <main id="app" class="container">
       <nav>
         <ul>
-            <li>
-                <img width="100" src="https://raw.githubusercontent.com/maximiliancw/crawlio/master/static/logo.png" alt="crawlio">
+            <li style="font-family: monospace">
+                <a href="/">
+                    <b>crawl<sub>io</sub></b>
+                </a>
             </li>
-            <li><a href="#">Docs</a></li>
-            <li><a href="#">Source</a></li>
+        </ul>
+        <ul>
+            <li><a href="#" data-tooltip="About"><i class="fa fa-info-circle"></i></a></li>
+            <li><a href="#" data-tooltip="Docs"><i class="fa fa-book"></i></a></li>
+            <li><a href="#" data-tooltip="Source"><i class="fa fa-github"></i></a></li>
         </ul>
       </nav>
-      <div style="padding: 50px 0; margin-bottom: 100px; border-top: 1px solid grey; border-bottom: 1px solid grey">
-        <input v-model="url" placeholder="http://example.com" />
-        <span>Selectors</span>
+      <div style="padding: 50px 0" v-if="!rows.length">
         <div class="grid">
-            <input v-model="newSelector.name" placeholder="Field" />
-            <input v-model="newSelector.query" placeholder="XPath" />
-            <button v-on:click="addSelector()">+</button>
+            <label for="form-url">
+                URL
+                <input id="form-url" v-model="form.url" placeholder="http://example.com" />
+            </label>
+            <label for="form-link-filter">
+                Link Filter
+                <input id="form-link-filter" v-model="form.linkFilter" placeholder="author" />
+            </label>
         </div>
-        <div style="margin: 50px 0;">
-            <span
-                class="selector"
-                v-for="(s, i) in selectors" v-bind:key="i"
-                v-on:click="delSelector(s)"
-                title="DELETE"
+        <h6>Selectors</h6>
+        <div class="grid">
+            <label for="form-selector-field">
+                Field
+                <input id="form-selector-field" v-model="newSelector.name" placeholder="title" />
+            </label>
+            <label for="form-selector-query">
+                XPath
+                <input id="form-selector-query" v-model="newSelector.query" placeholder="//title/text()" />
+            </label>
+            <button
+                @click="addSelector()"
+                :disabled="!newSelector.name || !newSelector.query"
+                style="max-width: 100px; justify-self: center;"
             >
-                {{ s.name }}: <code>{{ s.query }}</code>
-            </span>
+                <i class="fa fa-plus fa-lg"></i>
+            </button>
         </div>
-        <button @click="submit()">CRAWL</button>
+        <div class="grid" style="margin: 50px 0;">
+            <button
+                class="chip"
+                v-for="(selector, index) in form.selectors" :key="index"
+                :data-tooltip="selector.query"
+                @click="delSelector(selector)"
+            >
+                <span>{{ selector.name }}</span>
+            </button>
+        </div>
+        <div class="grid">
+            <span></span>
+            <button @click="submit()" :aria-busy="loading" :disabled="!isValidURL(form.url)">CRAWL</button>
+            <span></span>
+        </div>
+
       </div>
-      <table v-if="rows.length && !loading">
-        <thead>
-            <tr>
-                <th>URL</th>
-                <th>Headers</th>
-                <th>Data</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-for="(row, i) in rows" v-bind:key="i">
-                <td v-for="key in Object.keys(row)" v-bind:key="key">
-                    {{ row[key] }}
-                </td>
-            </tr>
-        </tbody>
-      </table>
-      <div v-if="loading">
-        <h3>LOADING...</h3>
+      <div v-if="rows.length">
+          <div class="grid">
+              <article class="widget">{{ rows.length }}<br/>pages</article>
+              <article class="widget">{{ stats.duration }}<br/>seconds</article>
+              <article class="widget">{{ stats.performance }}<br/>pages/second</article>
+          </div>
+          <table>
+              <tr>
+                  <th>URL</th>
+                  <th>Data</th>
+              </tr>
+              <tr v-for="row in rows" :key="row.url">
+                  <td>{{ row.url }}</td>
+                  <td><pre>{{ row.data }}</pre></td>
+              </tr>
+          </table>
       </div>
     </main>
     <script src="/static/app.js"></script>
