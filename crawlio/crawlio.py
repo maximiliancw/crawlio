@@ -2,17 +2,15 @@ import asyncio
 import random
 import time
 from collections import namedtuple
-from typing import Dict, Any, Generator, Union, List
+from typing import Dict, Any, Generator, Union
 from urllib.parse import urlparse, urljoin
 
 import aiohttp
 from parsel import Selector as Parsel
 
 
-Settings = namedtuple('Settings', ('max_concurrency', 'download_delay'))
 Request = namedtuple('Request', 'url')
 Response = namedtuple('Response', ('url', 'status', 'headers', 'html'))
-Page = namedtuple('Page', ('url', 'meta', 'data'))
 
 UA = (
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15',
@@ -37,24 +35,14 @@ class Crawler(object):
         start_time = time.time()
         async for response in self._crawl():
             async for obj in self._scrape(response):
-                # response is a new Request
                 if isinstance(obj, Request):
                     self._queue.add(obj.url)
-                # response is a new Page
-                elif isinstance(obj, Page):
-                    self._data.append(obj)
                 else:
-                    raise TypeError(f"{type(obj)} != {Page} or {Request}")
-        end_time = time.time()
-        duration = round(end_time - start_time, 2)
-        return dict(
-            meta=dict(
-                pages=len(self._data),
-                duration=duration,
-                performance=round(len(self._data)/duration, 2)
-            ),
-            data=self._data
-        )
+                    self._data.append(obj)
+        duration = round(time.time() - start_time, 2)
+        performance = round(len(self._data)/duration, 2)
+        info = dict(pages=len(self._data), duration=duration, pps=performance)
+        return dict(stats=info, results=self._data)
 
     async def _crawl(self) -> Generator[Response, None, None]:
         seen_urls = set()
@@ -72,7 +60,7 @@ class Crawler(object):
                         html=await response.text()
                     )
 
-    async def _scrape(self, response: Response) -> Generator[Union[Request, Page], None, None]:
+    async def _scrape(self, response: Response) -> Generator[Union[Request, Dict[str, Any]], None, None]:
         dom = Parsel(text=response.html)
         # Scrape (internal) links for crawling
         links = dom.xpath('//a/@href').getall()
@@ -92,9 +80,8 @@ class Crawler(object):
             for name, query in self._selectors.items()
         } if self._selectors else None
 
-        # Return scraped page
         metadata = dict(status=response.status, headers=response.headers)
-        yield Page(url=response.url, meta=metadata, data=data)
+        yield dict(url=response.url, meta=metadata, data=data)
 
 
 if __name__ == '__main__':
@@ -103,7 +90,6 @@ if __name__ == '__main__':
         'title': '//title/text()'
     }
     crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
-    results = asyncio.run(crawler.run(), debug=True)
-    print(results["meta"])
-    for item in results["data"]:
+    output = asyncio.run(crawler.run(), debug=True)
+    for item in output["results"]:
         print(item)
