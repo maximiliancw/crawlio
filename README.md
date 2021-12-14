@@ -1,7 +1,5 @@
-<img width="300" src="https://raw.githubusercontent.com/maximiliancw/crawlio/master/static/logo.png" alt="crawlio">
-
 # crawlio
-Simple web crawler built with Python's `asyncio`
+Simple and customizable web crawler built with Python's `asyncio`
 
 > Warning: this project is under active development and **not yet production-ready**!
 
@@ -10,6 +8,7 @@ Simple web crawler built with Python's `asyncio`
 - Crawling: download an entire website in seconds
 - Scraping: Customizable XPath selectors
 - Zero-configuration: get up and running with ~5 LoC
+- Interfaces: Web UI + JSON API powered by FastAPI & VueJS (coming soon)
 
 Built with `asyncio`, `aiohttp` and `Parsel` (by Scrapy authors)
 
@@ -22,18 +21,19 @@ pip install crawlio
 
 ```python
 import asyncio
-from crawlio import Crawler
+from crawlio import Crawler, Selector
 
-fields = {
-    'title': '//title/text()',
-    'text': '//p//text()'
-}
-crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
-output = asyncio.run(crawler.run(), debug=True)
-for item in output["results"]:
+crawler = Crawler(
+    url='https://innovinati.com/',
+    selectors=[
+        Selector('title', 'css', 'title::text', lambda items: items[0]),
+        Selector('text', 'xpath', '//p//text()', lambda items: ' '.join(items))
+    ]
+)
+output = asyncio.run(crawler.run())
+for item in output["data"]:
     print(item)
 ```
-
 
 # License
 Copyright (C) 2021  Maximilian Wolf

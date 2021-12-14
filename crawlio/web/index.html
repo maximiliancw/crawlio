@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en" style="height: 100%">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="crawlio | Simple web crawler built with Python's asyncio">
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
     <title>crawlio</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
-  </head>
-  <body>
-    <main id="app" class="container">
-      <nav>
+</head>
+<body>
+<main id="app" class="container">
+    <nav>
         <ul>
             <li style="font-family: monospace">
                 <a href="/">
@@ -20,77 +21,66 @@
             </li>
         </ul>
         <ul>
-            <li><a href="#" data-tooltip="About"><i class="fa fa-info-circle"></i></a></li>
-            <li><a href="#" data-tooltip="Docs"><i class="fa fa-book"></i></a></li>
-            <li><a href="#" data-tooltip="Source"><i class="fa fa-github"></i></a></li>
+            <li><a href="#" data-tooltip="Source"><i class="fa fa-code"></i></a></li>
+            <li><a href="#" data-tooltip="Documentation"><i class="fa fa-question"></i></a></li>
         </ul>
-      </nav>
-      <div style="padding: 50px 0" v-if="!rows.length">
-        <div class="grid">
-            <label for="form-url">
-                URL
-                <input id="form-url" v-model="form.url" placeholder="http://example.com" />
-            </label>
-            <label for="form-link-filter">
-                Link Filter
-                <input id="form-link-filter" v-model="form.linkFilter" placeholder="author" />
-            </label>
-        </div>
-        <h6>Selectors</h6>
+        <ul>
+            <li>
+                <button @click="submit()" :aria-busy="loading" :disabled="!isValidURL(form.url)">RUN</button>
+            </li>
+        </ul>
+    </nav>
+    <div v-if="!rows.length">
+        <label for="form-url">
+            URL
+            <input id="form-url" v-model="form.url" placeholder="http://example.com"/>
+        </label>
         <div class="grid">
             <label for="form-selector-field">
                 Field
-                <input id="form-selector-field" v-model="newSelector.name" placeholder="title" />
+                <input id="form-selector-field" v-model="newSelector.name" placeholder="title"/>
             </label>
             <label for="form-selector-query">
                 XPath
-                <input id="form-selector-query" v-model="newSelector.query" placeholder="//title/text()" />
+                <input
+                    id="form-selector-query"
+                    v-model="newSelector.query"
+                    placeholder="//title/text()"
+                    @keypress.enter="createSelector"
+                />
+                Press <code>ENTER</code> to save
             </label>
-            <button
-                @click="addSelector()"
-                :disabled="!newSelector.name || !newSelector.query"
-                style="max-width: 100px; justify-self: center;"
-            >
-                <i class="fa fa-plus fa-lg"></i>
-            </button>
         </div>
         <div class="grid" style="margin: 50px 0;">
             <button
                 class="chip"
                 v-for="(selector, index) in form.selectors" :key="index"
                 :data-tooltip="selector.query"
-                @click="delSelector(selector)"
-            >
-                <span>{{ selector.name }}</span>
-            </button>
+                @click="deleteSelector(selector)"
+                v-text="selector.name"
+            ></button>
         </div>
+    </div>
+    <div v-if="rows.length">
         <div class="grid">
-            <span></span>
-            <button @click="submit()" :aria-busy="loading" :disabled="!isValidURL(form.url)">CRAWL</button>
-            <span></span>
+            <article class="widget">{{ rows.length }}<br/>pages</article>
+            <article class="widget">{{ stats.duration }}<br/>seconds</article>
+            <article class="widget">{{ stats.pps }}<br/>pages/second</article>
         </div>
-
-      </div>
-      <div v-if="rows.length">
-          <div class="grid">
-              <article class="widget">{{ rows.length }}<br/>pages</article>
-              <article class="widget">{{ stats.duration }}<br/>seconds</article>
-              <article class="widget">{{ stats.performance }}<br/>pages/second</article>
-          </div>
-          <table>
-              <tr>
-                  <th>URL</th>
-                  <th>Data</th>
-                  <th>Headers</th>
-              </tr>
-              <tr v-for="row in rows" :key="row.url">
-                  <td>{{ row.url }}</td>
-                  <td><pre>{{ row.data }}</pre></td>
-                  <td><pre>{{ row.headers }}</pre></td>
-              </tr>
-          </table>
-      </div>
-    </main>
-    <script src="/static/app.js"></script>
-  </body>
+        <table>
+            <tr>
+                <th>URL</th>
+                <th>Data</th>
+            </tr>
+            <tr v-for="row in rows" :key="row.url">
+                <td>{{ row.url }}</td>
+                <td>
+                    <pre>{{ row.data }}</pre>
+                </td>
+            </tr>
+        </table>
+    </div>
+</main>
+<script src="/static/app.js"></script>
+</body>
 </html>
