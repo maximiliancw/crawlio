@@ -102,7 +102,7 @@ if __name__ == '__main__':
     fields = {
         'title': '//title/text()'
     }
-    crawler = Crawler('https://innovinati.com/', selectors=fields)
+    crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
     results = asyncio.run(crawler.run(), debug=True)
     print(results["meta"])
     for item in results["data"]:
