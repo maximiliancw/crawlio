@@ -81,10 +81,12 @@
               <tr>
                   <th>URL</th>
                   <th>Data</th>
+                  <th>Headers</th>
               </tr>
               <tr v-for="row in rows" :key="row.url">
                   <td>{{ row.url }}</td>
                   <td><pre>{{ row.data }}</pre></td>
+                  <td><pre>{{ row.headers }}</pre></td>
               </tr>
           </table>
       </div>
