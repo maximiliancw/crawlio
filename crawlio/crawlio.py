@@ -1,95 +1,101 @@
 import asyncio
 import random
 import time
-from collections import namedtuple
-from typing import Dict, Any, Generator, Union
+from typing import Dict, Any, Generator, Union, List
 from urllib.parse import urlparse, urljoin
 
 import aiohttp
-from parsel import Selector as Parsel
+from tqdm.asyncio import tqdm
+from parsel import Selector as Parser
 
-
-Request = namedtuple('Request', 'url')
-Response = namedtuple('Response', ('url', 'status', 'headers', 'html'))
-
-UA = (
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
-)
+from classes import Selector, Request, Response
 
 
 class Crawler(object):
+    user_agents = (
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+    )
 
-    def __init__(self, url: str, selectors: Dict[str, str] = None, delay: float = .3):
-        self._url = url
+    def __init__(self, url: str, selectors: List[Selector] = None, delay: float = .3):
         self._selectors = selectors
-        parsed = urlparse(self._url)
+        parsed = urlparse(url)
         self._base_url = f"{parsed.scheme}://{parsed.netloc}/"
-        self._headers = {'User-Agent': random.choice(UA)}
+        self._headers = {'User-Agent': random.choice(self.user_agents)}
         self._loop = asyncio.get_event_loop()
         self._delay = delay
         self._queue = {url}
-        self._data = []
+        self._errors = dict()
 
     async def run(self) -> Dict[str, Any]:
+        results = []
         start_time = time.time()
-        async for response in self._crawl():
+
+        async for response in tqdm(self._crawl(), desc='Crawling', ascii=False, unit=' pages'):
             async for obj in self._scrape(response):
                 if isinstance(obj, Request):
                     self._queue.add(obj.url)
                 else:
-                    self._data.append(obj)
+                    results.append(obj)
+
         duration = round(time.time() - start_time, 2)
-        performance = round(len(self._data)/duration, 2)
-        info = dict(pages=len(self._data), duration=duration, pps=performance)
-        return dict(stats=info, results=self._data)
+        performance = round(len(results)/duration, 2)
+        info = dict(pages=len(results), duration=duration, pps=performance, errors=self._errors)
+        return dict(info=info, data=results)
 
     async def _crawl(self) -> Generator[Response, None, None]:
         seen_urls = set()
         async with aiohttp.ClientSession(headers=self._headers) as session:
             while len(self._queue):
                 url = self._queue.pop()
-                if url in seen_urls: continue
-                await asyncio.sleep(random.uniform(.01, max(self._delay, 0)))
-                async with session.get(url) as response:
-                    seen_urls.add(url)
-                    yield Response(
-                        url=url,
-                        status=response.status,
-                        headers={k: v for k, v in response.headers.items()},
-                        html=await response.text()
-                    )
+                if url in seen_urls: continue   # Ignore previously seen URLs
+                await asyncio.sleep(random.uniform(.1, max(self._delay, .1)))   # Apply download delay
+                try:
+                    async with session.get(url) as response:
+                        seen_urls.add(url)  # Mark URL as processed
+                        yield Response(url=url, status=response.status, html=await response.text())
+                except Exception as e:
+                    self._errors[url] = str(e)
+                    print(e)
 
     async def _scrape(self, response: Response) -> Generator[Union[Request, Dict[str, Any]], None, None]:
-        dom = Parsel(text=response.html)
-        # Scrape (internal) links for crawling
-        links = dom.xpath('//a/@href').getall()
-        for link in links:
-            # Prepend base_url to relative links
+        doc = Parser(text=response.html, type='html')
+        # Scrape & filter links for crawling
+        for link in doc.xpath('//a/@href').getall():
+            # Handle relative links
             if link.startswith('/'):
                 link = urljoin(self._base_url, link)
-            # Discard external links
-            if not link.startswith(self._base_url):
-                continue
-            # Enqueue new request
-            yield Request(link)
+            # Follow links
+            if self.follow(link):
+                yield Request(link)
 
         # Scrape user-defined data
-        data = {
-            name: dom.xpath(query).getall()
-            for name, query in self._selectors.items()
-        } if self._selectors else None
+        data = dict()
+        if self._selectors:
+            for selector in self._selectors:
+                if selector.type == 'xpath':
+                    selection = doc.xpath(selector.query).getall()
+                elif selector.type == 'css':
+                    selection = doc.css(selector.query).getall()
+                else:
+                    raise ValueError(f"'{selector.type}' is not a valid selector type; use 'xpath' or 'css' instead")
+                data[selector.name] = selector.process(selection)
 
-        metadata = dict(status=response.status, headers=response.headers)
-        yield dict(url=response.url, meta=metadata, data=data)
+        yield dict(url=response.url, status=response.status, data=data)
+
+    def follow(self, link: str) -> bool:
+        # Discard external links
+        return link.startswith(self._base_url)
 
 
 if __name__ == '__main__':
-    """ Run this file for quick & dirty testing """
-    fields = {
-        'title': '//title/text()'
-    }
-    crawler = Crawler('https://quotes.toscrape.com/', selectors=fields)
-    output = asyncio.run(crawler.run(), debug=True)
-    for item in output["results"]:
+    crawler = Crawler(
+        url='https://innovinati.com',
+        selectors=[
+            Selector('images', 'img::attr(src)', type='css'),
+            Selector('text', '//p//text()', process=lambda items: ' '.join(items))
+        ]
+    )
+    output = asyncio.run(crawler.run())
+    for item in output["data"]:
         print(item)
