@@ -17,13 +17,13 @@ class Crawler(object):
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
     )
 
-    def __init__(self, url: str, selectors: List[Selector] = None, delay: float = .3):
+    def __init__(self, url: str, selectors: List[Selector] = None, delay: float = .3, timeout: float = 10.0):
         self._selectors = selectors
         parsed = urlparse(url)
         self._base_url = f"{parsed.scheme}://{parsed.netloc}/"
         self._headers = {'User-Agent': random.choice(self.user_agents)}
-        self._loop = asyncio.get_event_loop()
         self._delay = delay
+        self._timeout = timeout
         self._queue = {url}
         self._errors = dict()
 
@@ -45,18 +45,18 @@ class Crawler(object):
 
     async def _crawl(self) -> Generator[Response, None, None]:
         seen_urls = set()
-        async with aiohttp.ClientSession(headers=self._headers) as session:
+        async with aiohttp.ClientSession(headers=self._headers, conn_timeout=self._timeout) as session:
             while len(self._queue):
                 url = self._queue.pop()
                 if url in seen_urls: continue   # Ignore previously seen URLs
-                await asyncio.sleep(random.uniform(.1, max(self._delay, .1)))   # Apply download delay
+                delay = random.uniform(.1, max(self._delay, .1))
+                await asyncio.sleep(delay)   # Apply download delay
                 try:
                     async with session.get(url) as response:
                         seen_urls.add(url)  # Mark URL as processed
                         yield Response(url=url, status=response.status, html=await response.text())
                 except Exception as e:
                     self._errors[url] = str(e)
-                    print(e)
 
     async def _scrape(self, response: Response) -> Generator[Union[Request, Dict[str, Any]], None, None]:
         doc = Parser(text=response.html, type='html')
@@ -84,8 +84,11 @@ class Crawler(object):
         yield dict(url=response.url, status=response.status, data=data)
 
     def follow(self, link: str) -> bool:
-        # Discard external links
-        return link.startswith(self._base_url)
+        """
+        Determines whether the given link should be followed or ignored.
+        You can overwrite this method to implement custom link filters
+        """
+        return link.startswith(self._base_url)  # Discard external links
 
 
 if __name__ == '__main__':
@@ -97,5 +100,4 @@ if __name__ == '__main__':
         ]
     )
     output = asyncio.run(crawler.run())
-    for item in output["data"]:
-        print(item)
+    print(output)

@@ -1,1 +1,3 @@
 site_name: crawlio
+theme: material
+repo_url: https://github.com/maximiliancw/crawlio
