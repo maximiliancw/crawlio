@@ -1,5 +1,5 @@
 # crawlio
-Simple and customizable web crawler built with Python's `asyncio`
+Asynchronous web crawling and scraping with Python for minimalists
 
 > Warning: this project is under active development and **not yet production-ready**!
 
@@ -35,7 +35,7 @@ for item in output["data"]:
     print(item)
 ```
 
-# License
+## License
 Copyright (C) 2021  Maximilian Wolf
 
 This program is free software: you can redistribute it and/or modify
