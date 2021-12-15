@@ -23,7 +23,7 @@ class Crawler(object):
         self._base_url = f"{parsed.scheme}://{parsed.netloc}/"
         self._headers = {'User-Agent': random.choice(self.user_agents)}
         self._delay = delay
-        self._timeout = timeout
+        self._timeout = aiohttp.ClientTimeout(timeout)
         self._queue = {url}
         self._errors = dict()
 
@@ -45,7 +45,7 @@ class Crawler(object):
 
     async def _crawl(self) -> Generator[Response, None, None]:
         seen_urls = set()
-        async with aiohttp.ClientSession(headers=self._headers, conn_timeout=self._timeout) as session:
+        async with aiohttp.ClientSession(headers=self._headers, timeout=self._timeout) as session:
             while len(self._queue):
                 url = self._queue.pop()
                 if url in seen_urls: continue   # Ignore previously seen URLs
@@ -95,7 +95,7 @@ class Crawler(object):
 
 if __name__ == '__main__':
     crawler = Crawler(
-        url='https://innovinati.com',
+        url='https://quotes.toscrape.com/',
         selectors=[
             Selector('images', 'img::attr(src)', type='css'),
             Selector('text', '//p//text()', process=lambda items: ' '.join(items))
