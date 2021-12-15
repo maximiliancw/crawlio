@@ -63,6 +63,8 @@ class Crawler(object):
         # Scrape & filter links for crawling
         for link in doc.xpath('//a/@href').getall():
             # Handle relative links
+            if link.startswith('#'):
+                continue
             if link.startswith('/'):
                 link = urljoin(self._base_url, link)
             # Follow links
