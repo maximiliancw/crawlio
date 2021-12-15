@@ -17,7 +17,7 @@ class Crawler(object):
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
     )
 
-    def __init__(self, url: str, selectors: List[Selector] = None, delay: float = .3, timeout: float = 10.0):
+    def __init__(self, url: str, selectors: List[Selector] = None, delay: float = .2, timeout: float = 10.0):
         self._selectors = selectors
         parsed = urlparse(url)
         self._base_url = f"{parsed.scheme}://{parsed.netloc}/"
@@ -49,7 +49,7 @@ class Crawler(object):
             while len(self._queue):
                 url = self._queue.pop()
                 if url in seen_urls: continue   # Ignore previously seen URLs
-                delay = random.uniform(.1, max(self._delay, .1))
+                delay = random.uniform(.1, max(self._delay, .2))
                 await asyncio.sleep(delay)   # Apply download delay
                 try:
                     async with session.get(url) as response:
@@ -102,4 +102,5 @@ if __name__ == '__main__':
         ]
     )
     output = asyncio.run(crawler.run())
-    print(output)
+    print(output['data'])
+    print(output['info'])
