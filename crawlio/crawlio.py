@@ -104,7 +104,7 @@ class Crawler(object):
                 else:
                     raise ValueError(f"'{selector.type}' is not a valid selector type; use 'xpath' or 'css' instead")
                 data[selector.name] = selector.process(selection)
-        yield dict(url=response.url, status=response.status, data=data)
+        yield dict(url=response.url, status=response.status, **data)
 
     def follow(self, link: str) -> bool:
         """
