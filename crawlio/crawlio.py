@@ -1,14 +1,38 @@
 import asyncio
 import random
 import time
-from typing import Dict, Any, Generator, Union, List
+from dataclasses import dataclass
+from typing import Dict, Any, Generator, Union, List, Callable
 from urllib.parse import urlparse, urljoin
 
 import aiohttp
 from tqdm.asyncio import tqdm
 from parsel import Selector as Parser
 
-from classes import Selector, Request, Response
+
+def identity(obj: List[Any]) -> Any:
+    """ Return the identity of a list object """
+    return obj
+
+
+@dataclass
+class Request:
+    url: str
+
+
+@dataclass
+class Response:
+    url: str
+    status: int
+    html: str
+
+
+@dataclass
+class Selector:
+    name: str
+    query: str
+    type: str = 'xpath'
+    process: Callable[[List[Any]], Any] = identity
 
 
 class Crawler(object):
@@ -63,8 +87,6 @@ class Crawler(object):
         # Scrape & filter links for crawling
         for link in doc.xpath('//a/@href').getall():
             # Handle relative links
-            if link.startswith('#'):
-                continue
             if link.startswith('/'):
                 link = urljoin(self._base_url, link)
             # Follow links
@@ -82,7 +104,6 @@ class Crawler(object):
                 else:
                     raise ValueError(f"'{selector.type}' is not a valid selector type; use 'xpath' or 'css' instead")
                 data[selector.name] = selector.process(selection)
-
         yield dict(url=response.url, status=response.status, data=data)
 
     def follow(self, link: str) -> bool:
@@ -94,13 +115,13 @@ class Crawler(object):
 
 
 if __name__ == '__main__':
-    crawler = Crawler(
+    bot = Crawler(
         url='https://quotes.toscrape.com/',
         selectors=[
-            Selector('images', 'img::attr(src)', type='css'),
-            Selector('text', '//p//text()', process=lambda items: ' '.join(items))
+            Selector('links', '//a/@href'),
+            Selector('heading', type='xpath', query='//h3//text()', process=lambda items: ' '.join(items))
         ]
     )
-    output = asyncio.run(crawler.run())
-    print(output['data'])
-    print(output['info'])
+    output = asyncio.run(bot.run())
+    for item in output["data"]:
+        print(item)
