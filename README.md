@@ -5,12 +5,12 @@ Asynchronous web crawling and scraping with Python for minimalists
 
 ## Features
 
-- Crawling: download an entire website in seconds
-- Scraping: Customizable XPath selectors
+- Crawling: download an entire website in just a few seconds
+- Scraping: Customizable XPath & CSS data selectors (using `parsel`)
 - Zero-configuration: get up and running with ~5 LoC
-- Interfaces: Web UI + JSON API powered by FastAPI & VueJS (coming soon)
+- Interfaces: Web UI + JSON API powered by FastAPI & VueJS
 
-Built with `asyncio`, `aiohttp` and `Parsel` (by Scrapy authors)
+Built with `asyncio`, `aiohttp` and beer
 
 ## Setup
 ```bash
