@@ -4,6 +4,6 @@ License: GPLv3
 """
 
 
-__version__ = '2.3.1'
+__version__ = '2.3.2'
 
 from .crawlio import Crawler, Selector
