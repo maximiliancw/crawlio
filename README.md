@@ -24,10 +24,10 @@ import asyncio
 from crawlio import Crawler, Selector
 
 crawler = Crawler(
-    url='https://innovinati.com/',
+    url='https://quotes.toscrape.com/',
     selectors=[
-        Selector('title', 'css', 'title::text', lambda items: items[0]),
-        Selector('text', 'xpath', '//p//text()', lambda items: ' '.join(items))
+        Selector('links', 'css', 'a::href'),
+        Selector('heading', type='xpath', query='//h3//text()', process=lambda items: ' '.join(items))
     ]
 )
 output = asyncio.run(crawler.run())
