@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic.networks import AnyHttpUrl
 
-from crawlio import Crawler
-from crawlio.classes import Selector
+from crawlio import Crawler, Selector
+
 
 app = FastAPI()
 
@@ -22,11 +22,12 @@ async def index():
 @app.post('/api/crawl')
 async def crawl(
         url: AnyHttpUrl = Body(...),
-        selectors: List[Selector] = Body(None, description='List of crawlio.Selector instances'),
+        selectors: List[Selector] = Body(None, description='List of `crawlio.Selector` instances'),
         delay: float = Body(.3, description='Max. download delay')
 ):
     crawler = Crawler(url, selectors, delay)
-    return await crawler.run()
+    pages = await crawler.run()
+    return pages
 
 
 if __name__ == '__main__':
