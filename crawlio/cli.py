@@ -28,8 +28,3 @@ def run(url: str, export: bool = False):
     else:
         # TODO: Implement export functionality
         pass
-
-
-if __name__ == '__main__':
-    cli()
-
