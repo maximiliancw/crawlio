@@ -23,14 +23,14 @@ pip install crawlio
 import asyncio
 from crawlio import Crawler, Selector
 
-crawler = Crawler(
+bot = Crawler(
     url='https://quotes.toscrape.com/',
     selectors=[
-        Selector('links', 'css', 'a::href'),
+        Selector('links', '//a/@href'),
         Selector('heading', type='xpath', query='//h3//text()', process=lambda items: ' '.join(items))
     ]
 )
-output = asyncio.run(crawler.run())
+output = asyncio.run(bot.run())
 for item in output["data"]:
     print(item)
 ```

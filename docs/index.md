@@ -4,11 +4,11 @@ Asynchronous web crawling and scraping with Python for minimalists
 ## Features
 
 - Crawling: download an entire website in seconds
-- Scraping: Customizable XPath selectors
+- Scraping: Customizable XPath & CSS data selectors (using `parsel`)
 - Zero-configuration: get up and running with ~5 LoC
 - Interfaces: Web UI + JSON API powered by FastAPI & VueJS (coming soon)
 
-Built with `asyncio`, `aiohttp` and `Parsel` (by Scrapy authors)
+Built with `asyncio`, `aiohttp` and beer.
 
 ## Setup
 ```bash
@@ -21,14 +21,14 @@ pip install crawlio
 import asyncio
 from crawlio import Crawler, Selector
 
-crawler = Crawler(
-    url='https://innovinati.com/',
+bot = Crawler(
+    url='https://quotes.toscrape.com/',
     selectors=[
-        Selector('title', 'css', 'title::text', lambda items: items[0]),
-        Selector('text', 'xpath', '//p//text()', lambda items: ' '.join(items))
+        Selector('links', '//a/@href'),
+        Selector('heading', type='xpath', query='//h3//text()', process=lambda items: ' '.join(items))
     ]
 )
-output = asyncio.run(crawler.run())
+output = asyncio.run(bot.run())
 for item in output["data"]:
     print(item)
 ```
