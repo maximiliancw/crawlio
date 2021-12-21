@@ -13,7 +13,7 @@ with open('crawlio/__init__.py', 'r') as f:
 with open('README.md', 'r', encoding='utf-8') as f:
     readme = f.read()
 
-REQUIRES = []
+REQUIRES = ['aiohttp', 'click', 'fastapi', 'parsel']
 
 kwargs = {
     'name': 'crawlio',
@@ -39,7 +39,10 @@ kwargs = {
     'install_requires': REQUIRES,
     'tests_require': ['coverage', 'pytest'],
     'packages': find_packages(exclude=('tests', 'tests.*')),
-
+    'entry_points': '''
+    [console_scripts]
+    crawlio=crawlio.cli:cli
+    ''',
 }
 
 setup(**kwargs)
