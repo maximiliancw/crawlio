@@ -49,7 +49,7 @@ class Crawler(object):
         self._delay = delay
         self._timeout = aiohttp.ClientTimeout(timeout)
         self._queue = {url}
-        self._errors = dict()
+        self.errors = dict()
 
     async def run(self) -> Dict[str, Any]:
         results = []
@@ -64,7 +64,7 @@ class Crawler(object):
 
         duration = round(time.time() - start_time, 2)
         performance = round(len(results)/duration, 2)
-        info = dict(pages=len(results), duration=duration, pps=performance, errors=self._errors)
+        info = dict(pages=len(results), duration=duration, pps=performance, errors=self.errors)
         return dict(info=info, data=results)
 
     async def _crawl(self) -> Generator[Response, None, None]:
@@ -80,7 +80,7 @@ class Crawler(object):
                         seen_urls.add(url)  # Mark URL as processed
                         yield Response(url=url, status=response.status, html=await response.text())
                 except Exception as e:
-                    self._errors[url] = str(e)
+                    self.errors[url] = str(e)
 
     async def _scrape(self, response: Response) -> Generator[Union[Request, Dict[str, Any]], None, None]:
         doc = Parser(text=response.html, type='html')

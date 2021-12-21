@@ -8,7 +8,7 @@ Asynchronous web crawling and scraping with Python for minimalists
 - Zero-configuration: get up and running with ~5 LoC
 - Interfaces: Web UI + JSON API powered by FastAPI & VueJS
 
-Built with `asyncio`, `aiohttp` and beer.
+Built with `asyncio`, `aiohttp` and 🍺
 
 ## Setup
 ```bash
