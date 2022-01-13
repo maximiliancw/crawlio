@@ -10,11 +10,11 @@ Asynchronous web crawling and scraping with Python for minimalists
 
 Built with:
 
-    * `asyncio`
-    * `aiohttp`
-    * `parsel`
-    * `FastAPI`
-    * `VueJS`
+    - `asyncio`
+    - `aiohttp`
+    - `parsel`
+    - `FastAPI`
+    - `VueJS`
 
 ## Setup
 ```bash
