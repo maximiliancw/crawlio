@@ -1,16 +1,20 @@
 # crawlio
 Asynchronous web crawling and scraping with Python for minimalists
 
-> Warning: this project is under active development and **not yet production-ready**!
-
 ## Features
 
 - Crawling: download an entire website in just a few seconds
-- Scraping: Customizable XPath & CSS data selectors (using `parsel`)
+- Scraping: Customizable XPath & CSS data selectors
 - Zero-configuration: get up and running with ~5 LoC
-- Interfaces: Web UI + JSON API powered by FastAPI & VueJS
+- Interfaces: Python script + Web UI + JSON API
 
-Built with `asyncio`, `aiohttp` and 🍺
+Built with:
+
+    * `asyncio`
+    * `aiohttp`
+    * `parsel`
+    * `FastAPI`
+    * `VueJS`
 
 ## Setup
 ```bash
@@ -18,6 +22,8 @@ pip install crawlio
 ```
 
 ## Usage
+
+Create a custom `Crawler` instance and run it
 
 ```python
 import asyncio
@@ -36,7 +42,7 @@ for item in output["data"]:
 ```
 
 ## License
-Copyright (C) 2021  Maximilian Wolf
+Copyright (C) 2022  Maximilian Wolf
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
